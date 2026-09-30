@@ -1,3 +1,6 @@
+#define DT7
+// #define VT13
+// #define FLYSKY
 /*
  * Copyright (c) 2020-2022 Advanced Robotics at the University of Washington <robomstr@uw.edu>
  *
@@ -111,10 +114,21 @@ public:
     mockable void initialize();
 
     /**
+     * Calls either DJI or FLYSKY read methods
+     */
+    mockable void read();
+
+    /**
      * Reads/parses the current buffer and updates the current remote info state
      * and `CommandMapper` state.
      */
-    mockable void read();
+    mockable void readDJI();
+
+    /**
+     * Reads/parses the current buffer and updates the current remote info state
+     * and `CommandMapper` state.
+     */
+    mockable void readFLYSKY();
 
     /**
      * @return `true` if the remote is connected, `false` otherwise.
@@ -160,6 +174,11 @@ public:
     mockable inline bool getMouseR() const { return remote.mouse.r; }
 
     /**
+     * @return The current mouse m value.
+     */
+    mockable inline bool getMouseM() const { return remote.mouse.m; }
+
+    /**
      * @return `true` if the given `key` is pressed, `false` otherwise.
      */
     mockable inline bool keyPressed(Key key) const
@@ -172,12 +191,37 @@ public:
      */
     mockable uint32_t getUpdateCounter() const;
 
+    static const int REMOTE_BUF_LEN_DT7 = 18;      ///< Length of the dt7 recieve buffer.
+    static const int REMOTE_BUF_LEN_VT13 = 21;     ///< Length of the vt13 recieve buffer.
+    static const int REMOTE_BUF_LEN_FLY_SKY = 32;  ///< Length of the FlySky recieve buffer.
+#ifdef DT7
+    static const int REMOTE_BUF_LEN = REMOTE_BUF_LEN_DT7;
+#endif
+#ifdef VT13
+    static const int REMOTE_BUF_LEN = REMOTE_BUF_LEN_VT13;
+#endif
+#ifdef FLYSKY
+    static const int REMOTE_BUF_LEN = REMOTE_BUF_LEN_FLY_SKY;
+#endif
+
+    /// Parses the current rxBuffer.
+    void parseBufferDT7(uint8_t rxBuffer[REMOTE_BUF_LEN_DT7]);
+    void parseBufferVT13(uint8_t rxBuffer[REMOTE_BUF_LEN_VT13]);
+    void parseBufferFlySky(uint8_t rxBuffer[REMOTE_BUF_LEN_FLY_SKY]);
+
+    bool DT7Conected = false;
+    bool flySkyConnected = false;
+    bool VT13Connected = false;
+
 private:
-    static const int REMOTE_BUF_LEN = 18;              ///< Length of the remote recieve buffer.
     static const int REMOTE_READ_TIMEOUT = 6;          ///< Timeout delay between valid packets.
     static const int REMOTE_DISCONNECT_TIMEOUT = 100;  ///< Timeout delay for remote disconnect.
     static const int REMOTE_INT_PRI = 12;              ///< Interrupt priority.
+#ifdef FLYSKY
+    static constexpr float ANALOG_MAX_VALUE = 500.0f;  ///< Max value received by one of the sticks.
+#else
     static constexpr float ANALOG_MAX_VALUE = 660.0f;  ///< Max value received by one of the sticks.
+#endif
 
     /// The current remote information
     struct RemoteInfo
@@ -197,6 +241,7 @@ private:
             int16_t z = 0;
             bool l = false;
             bool r = false;
+            bool m = false;
         } mouse;
         uint16_t key = 0;   ///< Keyboard information
         int16_t wheel = 0;  ///< Remote wheel information
@@ -218,8 +263,7 @@ private:
     /// Current count of bytes read.
     uint8_t currentBufferIndex = 0;
 
-    /// Parses the current rxBuffer.
-    void parseBuffer();
+    void parseBuffer(uint8_t rxBuffer[REMOTE_BUF_LEN]);
 
     /// Clears the current rxBuffer.
     void clearRxBuffer();
