@@ -19,9 +19,17 @@ import sys
 sys.path.append(repopath("scripts/lbuild-helpers"))
 import board_info_parser
 
+# UART the DT7 remote's DR16 receiver is wired to (the board's DBUS port).
 REMOTE_UART_PORTS_BY_BOARD = {
     "rm-dev-board-a": "Uart1",
     "rm-dev-board-c": "Uart3",
+}
+
+# UART used by the VT13 and FlySky receivers.
+# TODO(northstar): confirm the Type A wiring; Uart1 is a placeholder (it is the DBUS port there).
+ALT_REMOTE_UART_PORTS_BY_BOARD = {
+    "rm-dev-board-a": "Uart1",
+    "rm-dev-board-c": "Uart1",
 }
 
 class Remote(Module):
@@ -39,9 +47,10 @@ class Remote(Module):
         board_name = env[":dev_board"]
         try:
             uart_port = REMOTE_UART_PORTS_BY_BOARD[board_name]
+            alt_uart_port = ALT_REMOTE_UART_PORTS_BY_BOARD[board_name]
         except KeyError:
             raise RuntimeError(f"Dev board {board_name} is not valid")
-        env.substitutions = {"uart_port": uart_port}
+        env.substitutions = {"uart_port": uart_port, "alt_uart_port": alt_uart_port}
         env.template("remote_serial_constants.hpp.in", "remote_serial_constants.hpp")
         env.copy("remote.cpp")
         env.copy("remote.hpp")

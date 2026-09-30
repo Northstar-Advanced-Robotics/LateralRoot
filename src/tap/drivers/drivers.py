@@ -181,11 +181,18 @@ def should_driver_be_generated(env, driver):
 def get_names_sorted(env, name):
     return sorted([driver[name] for driver in DRIVERS_AND_MODULE_DEPENDENCIES if should_driver_be_generated(env, driver)])
 
+# The command scheduler is constructed separately (its constructor differs between unit tests and
+# hardware), but its header is sorted in with the rest.
+COMMAND_SCHEDULER_SRC_FILE = "tap/control/command_scheduler.hpp"
+COMMAND_SCHEDULER_MOCK_HEADER = "tap/mock/command_scheduler_mock.hpp"
+
 def get_src_files_sorted(env):
-    return get_names_sorted(env, "src-file")
+    extra = [COMMAND_SCHEDULER_SRC_FILE] if env.has_module(":control") else []
+    return sorted(get_names_sorted(env, "src-file") + extra)
 
 def get_mock_headers_sorted(env):
-    return get_names_sorted(env, "mock-header")
+    extra = [COMMAND_SCHEDULER_MOCK_HEADER] if env.has_module(":control") else []
+    return sorted(get_names_sorted(env, "mock-header") + extra)
 
 def get_object_and_mock_names(env):
     objects_and_mocks = []

@@ -1,3 +1,7 @@
+#define DT7
+// #define VT13
+// #define FLYSKY
+
 /*
  * Copyright (c) 2020-2021 Advanced Robotics at the University of Washington <robomstr@uw.edu>
  *
@@ -22,7 +26,21 @@
 
 namespace tap::communication::serial::bound_ports
 {
-    static constexpr Uart::UartPort REMOTE_SERIAL_UART_PORT = Uart::UartPort::{{ uart_port }};
+#ifdef DT7
+static constexpr Uart::UartPort REMOTE_SERIAL_UART_PORT = Uart::UartPort::{{ uart_port }};
+static constexpr uint32_t REMOTE_BAUD_RATE = 100'000;
+static constexpr Uart::Parity REMOTE_PARITY = Uart::Parity::Even;
+#endif
+#ifdef VT13
+static constexpr Uart::UartPort REMOTE_SERIAL_UART_PORT = Uart::UartPort::{{ alt_uart_port }};
+static constexpr uint32_t REMOTE_BAUD_RATE = 921'600;
+static constexpr Uart::Parity REMOTE_PARITY = Uart::Parity::Disabled;
+#endif
+#ifdef FLYSKY
+static constexpr Uart::UartPort REMOTE_SERIAL_UART_PORT = Uart::UartPort::{{ alt_uart_port }};
+static constexpr uint32_t REMOTE_BAUD_RATE = 115'200;
+static constexpr Uart::Parity REMOTE_PARITY = Uart::Parity::Disabled;
+#endif
 }  // namespace tap::communication::serial::bound_ports
 
 #endif  // TAPROOT_REMOTE_SERIAL_CONSTANTS_HPP_
