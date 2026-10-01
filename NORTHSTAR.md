@@ -15,9 +15,7 @@ The controls repo (`northstar-robomaster`) uses it as its `taproot` submodule an
 
 ## Our changes on top of upstream
 
-`git diff develop northstar-dev -- src` shows exactly these (15 files).
-
-**Team edits**
+`git diff develop northstar-dev -- src` shows exactly these (11 files). Everything else is upstream's current code.
 
 | Commit | Files |
 |---|---|
@@ -26,31 +24,26 @@ The controls repo (`northstar-robomaster`) uses it as its `taproot` submodule an
 | `Drivers::DT` and generated drivers.hpp layout | `drivers/{drivers.hpp.in, drivers.py}` |
 | DJI motor encoder debug value | `motor/{dji_motor.hpp.in, dji_motor_encoder.cpp}` |
 
-**Held at an older upstream version** (what the robots ran in 2026; not yet tested against upstream's current version)
+## Differences from `northstar-2026`
 
-| Group | Files | Matches upstream |
-|---|---|---|
-| IMU | `communication/sensors/imu/abstract_imu.{cpp,hpp}` | `ffda4c2` (`c839023`) |
-| Wrapped encoder / trigger binding | `sensors/encoder/wrapped_encoder.hpp`, `control/trigger_binding.cpp` | `24e5988` / `34c4084` |
+`northstar-2026` held 17 files at older upstream versions and used 4 older files from the old LateralRoot `main`. This branch takes upstream's
+current versions of all of them. The commits that added those holds and the commits that revert them are both in this branch's history.
 
-**Taken from upstream here, held on `northstar-2026`:**
+| Area | What changes for team code |
+|---|---|
+| Ref serial | Upstream v1.3.1 (`b8bc808`). 2026 was held at `a0641bd` only because v1.3.1 was not out before competition. |
+| Math / transforms / `cmsis_mat` / `smooth_pid` / ballistics | Adds the slerp fix (`bb03295`) and new helpers. The IMU mounting-transform math (the only transform team code uses) is unchanged. |
+| IMU (`abstract_imu`) | Upstream `0086ebe` adds sample averaging that nothing fills yet, so readings are unchanged (+256 B RAM). |
+| Wrapped encoder / trigger binding | `922d592` access change; `b703b88` fixes `whileFalse` bindings never being removed. Team code uses neither. |
 
-- Math, transforms, `cmsis_mat`, `smooth_pid`, ballistics: all of `src/tap/algorithms` is upstream's current version (includes the slerp fix
-  `bb03295`). `northstar-2026` held older versions plus files from the old LateralRoot `main`; the commits that added those holds and the
-  commits that revert them are both in this branch's history, so the old state is easy to find. All robots, the simulator and the tests build
-  against it. The IMU mounting-transform math (the only transform team code uses) gives the same result as before. Robot test still pending.
-- Ref serial: `northstar-2026` keeps upstream `a0641bd` (Ref Serial 1.3) only because the v1.3.1 update was not out in time for
-  the 2026 competition. This branch uses upstream's current ref serial.
-
-Git treats every held-back file as a deliberate revert. When upstream changes one of them, a merge either keeps our old version silently
-(if the lines don't overlap) or conflicts. Either way, check these files in every update PR.
+All robots, the simulator and the unit tests build against this branch. A robot test is still pending before robots move to it.
 
 ## Updating from upstream Taproot
 
 1. On GitHub, click **Sync fork** on `develop`.
-2. Open a PR `develop` → `northstar-dev` and resolve conflicts (the held-back files and team edits are the usual spots).
+2. Open a PR `develop` → `northstar-dev` and resolve conflicts (the team edit files above are the usual spots).
    **Keep our version of every Northstar change** unless the team decides otherwise in that PR.
-3. In the controls repo, point the `taproot` submodule at the PR branch, run `scripts/regenerate_taproot.sh`, build all robots, run the
+3. In the controls repo, point the `taproot` submodule at the PR branch, regenerate (`cd northstar-robomaster-project && pipenv run lbuild build`), build all robots, run the
    tests, and test on a robot.
 4. Merge. At the start of a season, cut `northstar-<year>` from `northstar-dev` and freeze it like `northstar-2026`.
 
