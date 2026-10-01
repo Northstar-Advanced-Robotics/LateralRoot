@@ -15,7 +15,7 @@ The controls repo (`northstar-robomaster`) uses it as its `taproot` submodule an
 
 ## Our changes on top of upstream
 
-Each group is its own commit, so `git log develop..northstar-dev` lists them.
+`git diff develop northstar-dev -- src` shows exactly these (15 files).
 
 **Team edits**
 
@@ -25,22 +25,22 @@ Each group is its own commit, so `git log develop..northstar-dev` lists them.
 | Middle mouse button and `channelLessThan` trigger | `control/{remote_map_state.cpp, remote_map_state.hpp, trigger_helpers.hpp}` |
 | `Drivers::DT` and generated drivers.hpp layout | `drivers/{drivers.hpp.in, drivers.py}` |
 | DJI motor encoder debug value | `motor/{dji_motor.hpp.in, dji_motor_encoder.cpp}` |
-| Remove files the 2026 tree does not have | `algorithms/transforms/{axis.hpp, intrinsic_euler_extractor.hpp, vector.cpp}`, `control/finite_repeat_command.hpp` |
-| Imported from old LateralRoot `main` | `algorithms/{cmsis_mat.hpp, smooth_pid.cpp}`, `algorithms/transforms/{angular_velocity.hpp, transform.cpp}` |
 
-**Held at an older upstream version** (on purpose: team code depends on these versions)
+**Held at an older upstream version** (what the robots ran in 2026; not yet tested against upstream's current version)
 
 | Group | Files | Matches upstream |
 |---|---|---|
-| Transforms API | `transforms/{dynamic_orientation.hpp, dynamic_position.hpp, orientation.hpp, position.cpp, position.hpp, transform.hpp, vector.hpp}` | `486a015` / `8fbd0ac`, `vector.hpp` `b9ce1d7` |
 | IMU | `communication/sensors/imu/abstract_imu.{cpp,hpp}` | `ffda4c2` (`c839023`) |
-| Math utils / ballistics | `algorithms/{math_user_utils.cpp, math_user_utils.hpp, ballistics.hpp}` | `f0e079c` / `791ff77` |
 | Wrapped encoder / trigger binding | `sensors/encoder/wrapped_encoder.hpp`, `control/trigger_binding.cpp` | `24e5988` / `34c4084` |
 
-Because of the transforms and math holds, upstream's slerp fix (`bb03295`, `Orientation::interpolate` / `Transform::interpolate`) is not in this branch.
+**Taken from upstream here, held on `northstar-2026`:**
 
-Ref serial is **not** held here. `northstar-2026` keeps upstream `a0641bd` (Ref Serial 1.3) only because the v1.3.1 update was not out in time for
-the 2026 competition. This branch uses upstream's current ref serial.
+- Math, transforms, `cmsis_mat`, `smooth_pid`, ballistics: all of `src/tap/algorithms` is upstream's current version (includes the slerp fix
+  `bb03295`). `northstar-2026` held older versions plus files from the old LateralRoot `main`; the commits that added those holds and the
+  commits that revert them are both in this branch's history, so the old state is easy to find. All robots, the simulator and the tests build
+  against it. The IMU mounting-transform math (the only transform team code uses) gives the same result as before. Robot test still pending.
+- Ref serial: `northstar-2026` keeps upstream `a0641bd` (Ref Serial 1.3) only because the v1.3.1 update was not out in time for
+  the 2026 competition. This branch uses upstream's current ref serial.
 
 Git treats every held-back file as a deliberate revert. When upstream changes one of them, a merge either keeps our old version silently
 (if the lines don't overlap) or conflicts. Either way, check these files in every update PR.
