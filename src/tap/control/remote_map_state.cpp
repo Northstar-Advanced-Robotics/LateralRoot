@@ -32,7 +32,8 @@ RemoteMapState::RemoteMapState(
     const std::list<tap::communication::serial::Remote::Key> &keySet,
     const std::list<tap::communication::serial::Remote::Key> &negKeySet,
     bool mouseButtonLeftPressed,
-    bool mouseButtonRightPressed)
+    bool mouseButtonRightPressed,
+    bool mouseButtonMiddlePressed)
 {
     initLSwitch(leftss);
     initRSwitch(rightss);
@@ -45,6 +46,10 @@ RemoteMapState::RemoteMapState(
     if (mouseButtonRightPressed)
     {
         initRMouseButton();
+    }
+    if (mouseButtonMiddlePressed)
+    {
+        initMMouseButton();
     }
 }
 
@@ -79,27 +84,40 @@ RemoteMapState::RemoteMapState(
     const std::list<Remote::Key> &keySet,
     const std::list<Remote::Key> &negKeySet)
 {
-    if (button == MouseButton::LEFT)
+    switch (button)
     {
-        initLMouseButton();
+        case MouseButton::LEFT:
+            initLMouseButton();
+            break;
+        case MouseButton::RIGHT:
+            initRMouseButton();
+            break;
+        case MouseButton::Middle:
+            initMMouseButton();
+            break;
+        default:
+            break;
     }
-    else
-    {
-        initRMouseButton();
-    }
+
     initKeys(keySet);
     initNegKeys(negKeySet);
 }
 
 RemoteMapState::RemoteMapState(MouseButton button)
 {
-    if (button == MouseButton::LEFT)
+    switch (button)
     {
-        initLMouseButton();
-    }
-    else
-    {
-        initRMouseButton();
+        case MouseButton::LEFT:
+            initLMouseButton();
+            break;
+        case MouseButton::RIGHT:
+            initRMouseButton();
+            break;
+        case MouseButton::Middle:
+            initMMouseButton();
+            break;
+        default:
+            break;
     }
 }
 
@@ -109,6 +127,7 @@ void RemoteMapState::updateState(tap::communication::serial::Remote &remote)
     initRSwitch(remote.getSwitch(Remote::Switch::RIGHT_SWITCH));
     if (remote.getMouseL()) initLMouseButton();
     if (remote.getMouseR()) initRMouseButton();
+    if (remote.getMouseM()) initMMouseButton();
 }
 
 void RemoteMapState::initLSwitch(Remote::SwitchState ss) { lSwitch = ss; }
@@ -119,6 +138,8 @@ void RemoteMapState::initLMouseButton() { lMouseButton = true; }
 
 void RemoteMapState::initRMouseButton() { rMouseButton = true; }
 
+void RemoteMapState::initMMouseButton() { mMouseButton = true; }
+
 bool RemoteMapState::stateSubsetOf(const GenericRemoteMapState &other) const
 {
     auto &rOther = static_cast<const RemoteMapState &>(other);
@@ -127,6 +148,7 @@ bool RemoteMapState::stateSubsetOf(const GenericRemoteMapState &other) const
     if (!GenericRemoteMapState::stateSubsetOf(other)) return false;
     if (lMouseButton && !rOther.lMouseButton) return false;
     if (rMouseButton && !rOther.rMouseButton) return false;
+    if (mMouseButton && !rOther.mMouseButton) return false;
     return true;
 }
 
@@ -135,7 +157,8 @@ bool operator==(const RemoteMapState &rms1, const RemoteMapState &rms2)
     return rms1.getLSwitch() == rms2.getLSwitch() && rms1.getRSwitch() == rms2.getRSwitch() &&
            rms1.keys == rms2.keys && rms1.negKeys == rms2.negKeys &&
            rms1.getLMouseButton() == rms2.getLMouseButton() &&
-           rms1.getRMouseButton() == rms2.getRMouseButton();
+           rms1.getRMouseButton() == rms2.getRMouseButton() &&
+           rms1.getMMouseButton() == rms2.getMMouseButton();
 }
 
 bool operator!=(const RemoteMapState &rms1, const RemoteMapState &rms2) { return !(rms1 == rms2); }
